@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { drills } from '@/data/drills';
 import { patterns } from '@/data/patterns';
 import { Metronome } from '@/components/Metronome';
+import { InstallPrompt } from '@/components/InstallPrompt';
 import { Eyebrow } from '@/components/ui';
 
 const READING_LINKS = [
@@ -33,6 +34,8 @@ export default function Home() {
           メニューの自動生成は Phase 3。いまはメトロノームとマスタデータまで。
         </p>
       </section>
+
+      <InstallPrompt />
 
       <Metronome />
 

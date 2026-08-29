@@ -46,6 +46,14 @@ src/components/ 画面部品
 Pages サイトを作成する権限がないため）。有効化していないとデプロイは
 `Get Pages site failed` で落ちる。
 
+## アイコン
+
+`assets/icon.svg` と `assets/icon-maskable.svg` が原本で、`public/icons/*.png` は
+そこから書き出したもの。図案は8ビート基本形のグリッド（金＝ハイハット、
+赤＝スネア、青＝バスドラム）で、色は `src/lib/lanes.ts` と揃えている。
+差し替えるときは SVG を直してから PNG を書き出す（192 / 512 / マスカブル512 /
+apple-touch 180 / favicon 32）。
+
 ## 進捗
 
 | Phase | 内容 | 状態 |
@@ -57,4 +65,4 @@ Pages サイトを作成する権限がないため）。有効化していな�
 | 3 | 練習ログ・グラフ・メニュー自動生成 | 未着手 |
 | 4 | キャリブレーション + MIDI 入力 + 判定 | 未着手 |
 | 5 | マイクのオンセット検出（out） | 未着手 |
-| 6 | PWA・オフライン・GitHub Pages デプロイ | デプロイのみ先行実装（PWA・エクスポート/インポート・CSP は未着手） |
+| 6 | PWA・オフライン・GitHub Pages デプロイ | デプロイとインストール（manifest・アイコン・Service Worker）まで。Serwist によるプリキャッシュ、エクスポート/インポート、CSP は未着手 |
