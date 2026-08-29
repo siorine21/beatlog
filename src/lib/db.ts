@@ -36,7 +36,8 @@ export const DEFAULT_SETTINGS: Settings = {
   id: SETTINGS_ID,
   midiOffsetMs: 0,
   micOffsetMs: 0,
-  micThreshold: 0.1,
+  // 0 は「環境ノイズから自動で決める」の意味（spec.md §6.5）
+  micThreshold: 0,
   unlockedLevel: 1,
   assistLevel: 1,
   assistAuto: true,
