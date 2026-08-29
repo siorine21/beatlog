@@ -57,8 +57,4 @@ export async function updateSettings(patch: Partial<Omit<Settings, 'id'>>): Prom
   return next;
 }
 
-/** YYYY-MM-DD（ローカルタイムゾーン基準） */
-export function today(d: Date = new Date()): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
+export { today } from './db-date';

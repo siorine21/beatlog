@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 
 const TABS = [
   { href: '/', label: 'ホーム' },
-  { href: '/drills', label: 'ドリル' },
   { href: '/patterns', label: 'パターン' },
+  { href: '/log', label: '記録' },
   { href: '/settings', label: '設定' },
 ];
 

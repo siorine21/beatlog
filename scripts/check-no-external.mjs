@@ -28,6 +28,8 @@ const ALLOWED_HOSTS = new Map([
   ['tailwindcss.com', 'Tailwind CSS のライセンスバナーコメント'],
   ['nextjs.org', 'Next.js のエラーメッセージ内の案内URL'],
   ['react.dev', 'React のエラーメッセージ内の案内URL'],
+  ['redux.js.org', 'Redux（Recharts の依存）の圧縮版エラーメッセージ内の案内URL'],
+  ['redux-toolkit.js.org', 'Redux Toolkit（同上）の圧縮版エラーメッセージ内の案内URL'],
 ]);
 
 /**
