@@ -8,6 +8,7 @@ import { RhythmGrid } from '@/components/RhythmGrid';
 import { Notation } from '@/components/Notation';
 import { NotationLegend } from '@/components/NotationLegend';
 import { AssistControl } from '@/components/AssistControl';
+import { BpmSlider } from '@/components/BpmSlider';
 import { Card, Chip, Eyebrow } from '@/components/ui';
 import type { RhythmPattern } from '@/lib/types';
 
@@ -37,7 +38,8 @@ export function PatternPlayer({ pattern }: { pattern: RhythmPattern }) {
     config.staff === 'none' ? null : (
       <div key="staff" className="rounded-card bg-paper px-2 pt-3 pb-2 shadow-lift">
         <Notation pattern={pattern} currentStep={p.currentStep} assist={config} />
-        {(config.legend || config.furigana) && <NotationLegend pattern={pattern} />}
+        {/* assist 4 は素の譜面が到達点なので、たたんだ見出しごと出さない */}
+        {assist.level < 4 && <NotationLegend pattern={pattern} defaultOpen={config.legend} />}
       </div>
     );
 
@@ -87,17 +89,9 @@ export function PatternPlayer({ pattern }: { pattern: RhythmPattern }) {
           </span>
         </div>
 
-        <label className="mt-4 flex h-11 items-center">
-          <span className="sr-only">BPM</span>
-          <input
-            type="range"
-            min={BPM_MIN}
-            max={BPM_MAX}
-            value={p.bpm}
-            onChange={(e) => p.setBpm(Number(e.target.value))}
-            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-edge2 accent-chrome"
-          />
-        </label>
+        <div className="mt-4">
+          <BpmSlider value={p.bpm} min={BPM_MIN} max={BPM_MAX} onChange={p.setBpm} />
+        </div>
 
         <div className="mt-2 flex gap-1.5">
           {[-5, -1, 1, 5].map((delta) => (

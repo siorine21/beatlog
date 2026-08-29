@@ -78,6 +78,51 @@
     transform: scale(1.35);
   }
 
+  /*
+   * BPM のスライダー。縦のスワイプはブラウザに渡してスクロールさせる（pan-y）。
+   * つまみは指で掴めるよう大きめにする。
+   */
+  .bpm-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    touch-action: pan-y;
+    height: 28px;
+    cursor: pointer;
+  }
+
+  .bpm-slider::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--color-edge2);
+  }
+
+  .bpm-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    margin-top: -10px;
+    border-radius: 999px;
+    background: var(--color-chrome);
+    border: 3px solid var(--color-panel);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  .bpm-slider::-moz-range-track {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--color-edge2);
+  }
+
+  .bpm-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--color-chrome);
+    border: 3px solid var(--color-panel);
+  }
+
   /* 数字は等幅で。BPM や件数が動いても幅が揺れない */
   .tnum {
     font-variant-numeric: tabular-nums;

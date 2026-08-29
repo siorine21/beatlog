@@ -10,6 +10,7 @@ import {
   type MeterId,
   type SubdivisionId,
 } from '@/hooks/useMetronome';
+import { BpmSlider } from '@/components/BpmSlider';
 import { Card, Eyebrow } from '@/components/ui';
 
 /** 択一の切り替え。タップ領域は44px以上 */
@@ -109,17 +110,9 @@ export function Metronome() {
         {m.playing ? `${m.currentBeat + 1} 拍目` : '停止中'}
       </p>
 
-      <label className="mt-4 flex h-11 items-center">
-        <span className="sr-only">BPM</span>
-        <input
-          type="range"
-          min={BPM_MIN}
-          max={BPM_MAX}
-          value={m.bpm}
-          onChange={(e) => m.setBpm(Number(e.target.value))}
-          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-edge2 accent-chrome"
-        />
-      </label>
+      <div className="mt-4">
+        <BpmSlider value={m.bpm} min={BPM_MIN} max={BPM_MAX} onChange={m.setBpm} />
+      </div>
 
       <div className="mt-2 flex gap-1.5">
         <NudgeButton onClick={() => m.nudgeBpm(-5)}>−5</NudgeButton>
