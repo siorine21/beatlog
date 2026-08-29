@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { NavTabs } from '@/components/NavTabs';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
+import { ChunkErrorRecovery } from '@/components/ChunkErrorRecovery';
 import { withBase } from '@/lib/path';
 import './globals.css';
 
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
         </div>
         <ServiceWorkerRegistration />
+        <ChunkErrorRecovery />
       </body>
     </html>
   );

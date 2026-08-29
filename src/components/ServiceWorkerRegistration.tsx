@@ -12,7 +12,9 @@ export function ServiceWorkerRegistration() {
     if (process.env.NODE_ENV !== 'production') return;
     if (!('serviceWorker' in navigator)) return;
     navigator.serviceWorker
-      .register(withBase('/sw.js'), { scope: withBase('/') })
+      // updateViaCache: 'none' で、sw.js 自体は必ずネットワークから取り直す。
+      // これをしないと更新が端末に届くのが遅れる
+      .register(withBase('/sw.js'), { scope: withBase('/'), updateViaCache: 'none' })
       .catch(() => {
         // 登録できなくてもアプリは通常どおり動く
       });
