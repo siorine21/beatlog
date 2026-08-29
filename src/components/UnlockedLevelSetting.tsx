@@ -5,11 +5,8 @@ import { useSettings } from '@/hooks/useSettings';
 import { Card, Eyebrow } from '@/components/ui';
 
 /**
- * 解放レベルの手動設定。
- *
- * 本来は卒業条件の達成で自動的に上がる（Phase 3 で src/data/levels.ts の
- * computeUnlockedLevel から更新する）。それまで手で動かせないと
- * パターン集の確認ができないため、暫定の操作として置いている。
+ * 解放レベル。卒業条件を満たすと store.ts が自動で上げる（Phase 3）。
+ * ここでは、様子を見たいときや作り直したいときのために手動でも切り替えられる。
  */
 export function UnlockedLevelSetting() {
   const { settings, error, update } = useSettings();
@@ -21,7 +18,7 @@ export function UnlockedLevelSetting() {
         <Eyebrow>解放レベル</Eyebrow>
       </div>
       <p className="mb-3 text-[12px] text-dim">
-        Phase 3 からは卒業条件の達成で自動的に上がります。いまは手動で切り替えます。
+        ドリルの卒業条件を満たすと自動で上がります。ここでは手動でも切り替えられます。
       </p>
 
       {error && <p className="text-[12px] text-snare">設定を読めませんでした: {error}</p>}

@@ -124,4 +124,9 @@ export interface Settings {
   assistLevel: AssistLevel;
   assistAuto: boolean;
   clickSound: 'click' | 'woodblock' | 'beep';
+  /**
+   * MIDIノート番号 → レーン。機種によって割り当てが異なるため設定で変更できる。
+   * 端末ごとの値なので、将来同期する場合も対象外にすること（spec.md §10.3）。
+   */
+  midiNoteMap: Record<number, Lane>;
 }

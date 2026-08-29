@@ -9,7 +9,7 @@ export default function LogPage() {
       <section className="pt-2">
         <h1 className="text-[28px] leading-tight font-bold tracking-tight">記録</h1>
         <p className="mt-2 text-[13px] text-dim">
-          ズレの推移は Phase 4 の判定機能が入ってから加わります。
+          テンポとズレの推移、週ごとの練習時間。
         </p>
       </section>
 

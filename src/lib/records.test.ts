@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addDays,
   bpmSeries,
+  errorSeries,
   practiceStreak,
   totalPracticeSec,
   weekStart,
@@ -127,5 +128,26 @@ describe('bpmSeries', () => {
 describe('totalPracticeSec', () => {
   it('全試行の時間を合計する', () => {
     expect(totalPracticeSec([attempt('s1', { durationSec: 60 }), attempt('s1', { durationSec: 90 })])).toBe(150);
+  });
+});
+
+describe('errorSeries', () => {
+  const sessions = [session('s1', '2026-08-27'), session('s2', '2026-08-28')];
+
+  it('判定値のある試行だけを日付順に並べる', () => {
+    const attempts = [
+      attempt('s1', { meanAbsErrorMs: 40 }),
+      attempt('s1', { meanAbsErrorMs: 28 }),
+      attempt('s2', {}),
+      attempt('s2', { meanAbsErrorMs: 22 }),
+    ];
+    expect(errorSeries(attempts, sessions, 'hihat-only')).toEqual([
+      { date: '2026-08-27', meanAbsErrorMs: 28 },
+      { date: '2026-08-28', meanAbsErrorMs: 22 },
+    ]);
+  });
+
+  it('判定値が無ければ空', () => {
+    expect(errorSeries([attempt('s1', {})], sessions, 'hihat-only')).toEqual([]);
   });
 });

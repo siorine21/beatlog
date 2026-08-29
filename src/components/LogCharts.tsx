@@ -16,6 +16,7 @@ import { drills, getDrill } from '@/data/drills';
 import { useHistory } from '@/hooks/useHistory';
 import {
   bpmSeries,
+  errorSeries,
   practiceDates,
   practiceStreak,
   totalPracticeSec,
@@ -105,6 +106,17 @@ export function LogCharts() {
   }, [history]);
 
   const selected = drillId ?? practiced[0]?.id ?? null;
+
+  const errorData = useMemo(
+    () =>
+      history && selected
+        ? errorSeries(history.attempts, history.sessions, selected).map((point) => ({
+            date: shortDate(point.date),
+            error: Math.round(point.meanAbsErrorMs),
+          }))
+        : [],
+    [history, selected],
+  );
 
   const bpmData = useMemo(
     () =>
@@ -265,6 +277,49 @@ export function LogCharts() {
                   />
                 </LineChart>
               </ResponsiveContainer>
+            </Card>
+          </section>
+
+          <section>
+            <div className="mb-2">
+              <Eyebrow>平均絶対誤差の推移</Eyebrow>
+            </div>
+            <Card className="px-2 py-3">
+              {errorData.length === 0 ? (
+                <p className="px-2 py-6 text-center text-[12px] text-dim">
+                  このドリルにはまだ判定の記録がありません。自宅モードで電子ドラムを繋いで
+                  練習すると、ここにズレの推移が出ます。
+                </p>
+              ) : (
+                <ResponsiveContainer width="100%" height={190}>
+                  <LineChart data={errorData} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
+                    <CartesianGrid stroke={GRID} vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: AXIS, fontSize: 10 }}
+                      tickLine={false}
+                      axisLine={{ stroke: GRID }}
+                    />
+                    <YAxis
+                      tick={{ fill: AXIS, fontSize: 10 }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={44}
+                      domain={[0, 'dataMax + 10']}
+                    />
+                    <Tooltip content={<ChartTooltip unit="ms" />} />
+                    <Line
+                      type="monotone"
+                      dataKey="error"
+                      name="平均絶対誤差"
+                      stroke="#dfe3e9"
+                      strokeWidth={2}
+                      dot={{ r: 4, fill: SURFACE, stroke: '#dfe3e9', strokeWidth: 2 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </Card>
           </section>
         </>
