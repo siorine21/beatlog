@@ -18,6 +18,7 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run test
       # basePath はリポジトリ名から自動決定する（spec.md §5.1 (c)）。
       # 手で設定させないことで、設定漏れによる事故をなくす。
       - name: Resolve base path

@@ -2,17 +2,47 @@
 
 import Link from 'next/link';
 import { usePatternPlayer } from '@/hooks/usePatternPlayer';
+import { useAssist } from '@/hooks/useAssist';
 import { BPM_MAX, BPM_MIN } from '@/hooks/useMetronome';
 import { RhythmGrid } from '@/components/RhythmGrid';
+import { Notation } from '@/components/Notation';
+import { NotationLegend } from '@/components/NotationLegend';
+import { AssistControl } from '@/components/AssistControl';
 import { Card, Chip, Eyebrow } from '@/components/ui';
 import type { RhythmPattern } from '@/lib/types';
 
 /**
- * パターン詳細。グリッド・再生・BPM・口ドラム表記を出す。
- * 五線譜は Phase 2b でここに足す。currentStep をそのまま渡せる形にしてある。
+ * パターン詳細。グリッドと五線譜に同じ currentStep を渡し、
+ * 再生中に同じ位置を同時に光らせる（spec.md §3.8「同期ハイライト」）。
+ * どちらを主にするかはガイドレベルで決まる。
  */
 export function PatternPlayer({ pattern }: { pattern: RhythmPattern }) {
   const p = usePatternPlayer(pattern);
+  const assist = useAssist(pattern.level);
+  const config = assist.config;
+
+  const grid =
+    config.grid === 'none' ? null : (
+      <Card key="grid" className={config.grid === 'mini' ? 'px-4 py-3 opacity-70' : 'px-4 py-4'}>
+        <RhythmGrid
+          pattern={pattern}
+          currentStep={p.currentStep}
+          compact={config.grid === 'mini'}
+          showRuler={config.grid === 'main'}
+        />
+      </Card>
+    );
+
+  const staff =
+    config.staff === 'none' ? null : (
+      <div key="staff" className="rounded-card bg-paper px-2 pt-3 pb-2 shadow-lift">
+        <Notation pattern={pattern} currentStep={p.currentStep} assist={config} />
+        {(config.legend || config.furigana) && <NotationLegend pattern={pattern} />}
+      </div>
+    );
+
+  // 五線譜が主のときは譜面を上に置く
+  const stack = config.staff === 'main' ? [staff, grid] : [grid, staff];
 
   return (
     <main className="flex flex-col gap-5">
@@ -21,7 +51,7 @@ export function PatternPlayer({ pattern }: { pattern: RhythmPattern }) {
           ← パターン一覧
         </Link>
         <h1 className="text-[26px] leading-tight font-bold tracking-tight">{pattern.name}</h1>
-        <div className="mt-2 flex gap-1.5">
+        <div className="mt-2 flex flex-wrap gap-1.5">
           <Chip tone="mono">Lv{pattern.level}</Chip>
           <Chip tone="mono">{pattern.resolution}分割</Chip>
           <Chip tone="mono">
@@ -30,7 +60,6 @@ export function PatternPlayer({ pattern }: { pattern: RhythmPattern }) {
         </div>
       </section>
 
-      {/* 口ドラム表記は大きく出す（spec.md §3.2） */}
       <Card className="px-4 py-4">
         <div className="mb-2">
           <Eyebrow>口ドラム</Eyebrow>
@@ -38,9 +67,15 @@ export function PatternPlayer({ pattern }: { pattern: RhythmPattern }) {
         <p className="text-[20px] leading-relaxed tracking-[0.1em]">{pattern.vocal}</p>
       </Card>
 
-      <Card className="px-4 py-4">
-        <RhythmGrid pattern={pattern} currentStep={p.currentStep} />
-      </Card>
+      {stack}
+
+      <AssistControl
+        level={assist.level}
+        auto={assist.auto}
+        onSelect={assist.setLevel}
+        onStepBack={assist.stepBack}
+        onAutoChange={assist.setAuto}
+      />
 
       <Card className="px-4 pt-4 pb-4">
         <div className="flex items-end justify-center gap-2">

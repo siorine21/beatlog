@@ -39,6 +39,7 @@
 ## コマンド
 - 開発: `npm run dev`
 - 型チェック: `npm run typecheck`
+- テスト: `npm run test`（vitest）
 - ビルド: `npm run build`
 
 ## 現在の進捗
@@ -52,4 +53,8 @@
   スケジューラの起動・停止と現在ステップの取り出しは src/hooks/useStepPlayer.ts に
   まとめてあり、メトロノームとパターン再生で共有している。
   /settings の解放レベル切替は Phase 3 で自動化するまでの暫定。
-- 次は Phase 2b（五線譜と読譜支援）。docs/phases.md と docs/notation-sample.html を参照する。
+- Phase 2b 完了（五線譜、ガイドレベル、記号リファレンス、読譜クイズ）。
+  五線譜のレイアウト計算は src/lib/notation/layout.ts（純関数・テストあり）、
+  描画は src/components/Notation.tsx。楽譜ライブラリは使わない。
+  グリッドと五線譜には同じ currentStep を渡して同時にハイライトする。
+- 次は Phase 3（ログ・グラフ・メニュー生成）。docs/phases.md を参照する。

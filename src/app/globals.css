@@ -17,6 +17,9 @@
   --color-dim: #7c838d;
   --color-silk: #666d77;
   --color-chrome: #d6dae0;
+  /* 譜面は紙の上に置く。暗い画面でも譜面だけは教則本と同じ見え方にする */
+  --color-paper: #f4f2ec;
+  --color-ink: #171a20;
   --color-ok: #6aa87f;
 
   --color-hihat: #d2a34a;
@@ -62,6 +65,17 @@
     outline: 2px solid var(--color-chrome);
     outline-offset: 2px;
     border-radius: 4px;
+  }
+
+  /* 五線譜のハイライト。再生位置の符頭だけを大きくする */
+  .notehead {
+    transition: transform 0.09s;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .notehead-active {
+    transform: scale(1.35);
   }
 
   /* 数字は等幅で。BPM や件数が動いても幅が揺れない */
