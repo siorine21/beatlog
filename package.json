@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "check:no-external": "node scripts/check-no-external.mjs"
+    "check:no-external": "node scripts/check-no-external.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "dexie": "^4.4.5",
@@ -25,7 +26,8 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.24",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   },
   "overrides": {
     "postcss": "^8.5.26"

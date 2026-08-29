@@ -37,6 +37,21 @@ export const LANE_COLOR: Record<Lane, string> = {
   kick: '#4b84c4',
 };
 
+/**
+ * 五線譜（紙の上）で使う色。色相はグリッドと同じで、明るい紙の上で
+ * 沈まないように暗く振ってある。グリッドと五線譜で「同じレーンは同じ色」を
+ * 保つのが目的（spec.md §3.8「色の一貫性」）。
+ */
+export const LANE_COLOR_PRINT: Record<Lane, string> = {
+  crash: '#7a5fa8',
+  ride: '#5a76a8',
+  hihat: '#a87c1e',
+  tom1: '#3f7a58',
+  snare: '#b03f35',
+  tom2: '#2f6a4c',
+  kick: '#2f6099',
+};
+
 /** そのパターンが実際に使っているレーンを表示順で返す。 */
 export function lanesOf(grid: Partial<Record<Lane, number[]>>): Lane[] {
   return LANE_ORDER.filter((lane) => grid[lane]?.some((v) => v > 0));
