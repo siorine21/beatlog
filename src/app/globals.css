@@ -3,17 +3,21 @@
 /*
  * 配色は docs/notation-sample.html の見本に合わせる。
  * レーンの色（hihat/snare/kick）はグリッドと五線譜で完全に一致させること（spec.md §3.8）。
+ * アクセント色は無彩色（chrome）に寄せている。有彩色はレーンの意味に予約されているため、
+ * ボタンに使うと譜面上の色分けと衝突する。
  */
 @theme {
   --color-bg: #0f1115;
   --color-panel: #171a20;
   --color-panel2: #1c2027;
+  --color-raised: #222732;
   --color-edge: #272c34;
   --color-edge2: #333944;
   --color-txt: #eae9e5;
   --color-dim: #7c838d;
   --color-silk: #666d77;
   --color-chrome: #d6dae0;
+  --color-ok: #6aa87f;
 
   --color-hihat: #d2a34a;
   --color-snare: #d05b50;
@@ -23,18 +27,51 @@
   --color-crash: #a98fd0;
   --color-ride: #8fa8d0;
 
+  --radius-card: 14px;
+  --radius-chip: 999px;
+
+  /* 面の立ち上がりを1pxのハイライトで出す。暗い画面での奥行きはこれが効く */
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
   /* 外部フォントは使わない（spec.md §5）。端末のシステムフォントを使う。 */
   --font-sans: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-bg);
+    /* ごく薄い走査線。単調な黒面に質感を与える */
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.014) 0 1px,
+      transparent 1px 3px
+    );
+    color: var(--color-txt);
+    font-family: var(--font-sans);
+    line-height: 1.65;
+  }
+
+  /* 押せるものはキーボードでも分かるようにする */
+  :focus-visible {
+    outline: 2px solid var(--color-chrome);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* 数字は等幅で。BPM や件数が動いても幅が揺れない */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
-body {
-  background: var(--color-bg);
-  color: var(--color-txt);
-  font-family: var(--font-sans);
-  line-height: 1.65;
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
 }

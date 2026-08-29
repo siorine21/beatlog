@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Settings } from '@/lib/types';
+import { Card, Eyebrow } from '@/components/ui';
 
 /**
  * Phase 0 の動作確認用。IndexedDB（Dexie）が開けること、
@@ -9,7 +10,9 @@ import type { Settings } from '@/lib/types';
  */
 export function DbStatus() {
   const [state, setState] = useState<
-    { status: 'loading' } | { status: 'ok'; settings: Settings } | { status: 'error'; message: string }
+    | { status: 'loading' }
+    | { status: 'ok'; settings: Settings }
+    | { status: 'error'; message: string }
   >({ status: 'loading' });
 
   useEffect(() => {
@@ -21,29 +24,48 @@ export function DbStatus() {
         if (!cancelled) setState({ status: 'ok', settings });
       })
       .catch((e: unknown) => {
-        if (!cancelled) setState({ status: 'error', message: e instanceof Error ? e.message : String(e) });
+        if (!cancelled)
+          setState({ status: 'error', message: e instanceof Error ? e.message : String(e) });
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
+  const dot = {
+    loading: 'bg-silk',
+    ok: 'bg-ok',
+    error: 'bg-snare',
+  }[state.status];
+
   return (
-    <div className="rounded-lg border border-edge bg-panel p-3 text-[12px]">
-      <h2 className="mb-2 font-mono text-[10px] tracking-[0.2em] text-silk">INDEXEDDB</h2>
-      {state.status === 'loading' && <p className="text-dim">読み込み中…</p>}
-      {state.status === 'error' && <p className="text-snare">開けませんでした: {state.message}</p>}
+    <Card className="px-4 py-3">
+      <div className="mb-2.5 flex items-center gap-2">
+        <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden />
+        <Eyebrow>保存先 IndexedDB</Eyebrow>
+      </div>
+
+      {state.status === 'loading' && <p className="text-[12px] text-dim">読み込み中…</p>}
+      {state.status === 'error' && (
+        <p className="text-[12px] text-snare">開けませんでした: {state.message}</p>
+      )}
       {state.status === 'ok' && (
-        <dl className="grid grid-cols-[8rem_1fr] gap-x-2">
-          <dt className="text-silk">解放レベル</dt>
-          <dd>Lv{state.settings.unlockedLevel}</dd>
-          <dt className="text-silk">ガイドレベル</dt>
-          <dd>
-            {state.settings.assistLevel}
-            {state.settings.assistAuto ? "（自動）" : "（手動）"}
-          </dd>
+        <dl className="flex flex-col gap-1.5 text-[12px]">
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="text-silk">解放レベル</dt>
+            <dd className="font-mono tnum text-txt">Lv{state.settings.unlockedLevel}</dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="text-silk">ガイドレベル</dt>
+            <dd className="font-mono tnum text-txt">
+              {state.settings.assistLevel}
+              <span className="ml-1 font-sans text-dim">
+                {state.settings.assistAuto ? '自動' : '手動'}
+              </span>
+            </dd>
+          </div>
         </dl>
       )}
-    </div>
+    </Card>
   );
 }

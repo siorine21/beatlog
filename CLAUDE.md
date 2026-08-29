@@ -25,6 +25,17 @@
 - 外部から読み込むデータ（JSONインポート）は必ずスキーマ検証を通してから
   IndexedDB に書き込む。
 
+## デザインの決めごと
+- 色・角丸・影は `src/app/globals.css` の `@theme` トークンだけを使う。
+  画面ごとに色を書かない。
+- 共通部品は `src/components/ui.tsx`（Card / Chip / Eyebrow / LevelBadge）。
+- 主要な操作の色は無彩色（chrome）。有彩色はレーン（hihat/snare/kick…）の
+  意味に予約されており、ボタンに使うと譜面の色分けと衝突する。
+- レーンの色は `src/lib/lanes.ts` の `LANE_COLOR` を唯一の出所とし、
+  グリッドと五線譜で必ず一致させる（spec.md §3.8）。
+- 押せるものは押せると分かる形にする（塗り・枠・押下時の変化）。
+  タップ領域は最低44px。数字は `tnum` で等幅にする。
+
 ## コマンド
 - 開発: `npm run dev`
 - 型チェック: `npm run typecheck`
