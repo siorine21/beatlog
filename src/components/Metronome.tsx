@@ -88,6 +88,8 @@ export function Metronome() {
           return (
             <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
               <span
+                data-step={i}
+                data-active={active || undefined}
                 className={`w-full rounded-full transition-colors duration-75 ${
                   onBeat ? 'h-2' : 'h-1 self-center'
                 } ${active ? 'bg-chrome' : onBeat ? 'bg-edge2' : 'bg-edge'}`}

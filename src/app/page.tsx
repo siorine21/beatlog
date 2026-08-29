@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { drills } from '@/data/drills';
 import { patterns } from '@/data/patterns';
-import { DbStatus } from '@/components/DbStatus';
 import { Metronome } from '@/components/Metronome';
 import { Eyebrow } from '@/components/ui';
 
@@ -56,8 +55,6 @@ export default function Home() {
           </Link>
         ))}
       </section>
-
-      <DbStatus />
     </main>
   );
 }
