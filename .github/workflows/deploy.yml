@@ -32,7 +32,11 @@ jobs:
       - run: npm run build
       # 外部ドメインへの参照が混入していないことを確認する（spec.md §11.6）
       - run: npm run check:no-external
+      # enablement: true でリポジトリの Pages を action 自身が有効化する。
+      # spec.md §5.1 (c) の「手で設定させない」方針に合わせ、
+      # Settings での手作業なしにデプロイが通るようにする。
       - uses: actions/configure-pages@v5
+        with: { enablement: true }
       - uses: actions/upload-pages-artifact@v3
         with: { path: ./out }
   deploy:
