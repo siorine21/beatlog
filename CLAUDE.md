@@ -44,8 +44,10 @@
 
 ## 現在の進捗
 - Phase 0 完了（プロジェクト初期化、Dexie スキーマ、マスタデータ、/drills と /patterns の一覧）
-- Phase 6 の一部を先行実装（静的エクスポート、basePath、GitHub Pages デプロイ）。
-  PWA（Serwist）、データのエクスポート/インポート、CSP は未着手。
+- Phase 6 の一部を先行実装（静的エクスポート、basePath、GitHub Pages デプロイ、
+  app/manifest.ts とアイコン、最小の Service Worker によるインストール対応）。
+  Serwist によるプリキャッシュ、データのエクスポート/インポート、CSP は未着手。
+  手書きの文字列パスは必ず src/lib/path.ts の withBase() を通す。
 - Phase 1 完了（先読みスケジューラ、クリック音、メトロノームUI）。
   スケジューラは src/lib/audio/scheduler.ts。予約したステップは scheduledSteps に
   残してあり、Phase 2 のパターン再生と Phase 4 の判定はこれを共有する。
