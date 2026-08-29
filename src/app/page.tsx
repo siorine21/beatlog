@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { drills } from '@/data/drills';
 import { patterns } from '@/data/patterns';
 import { DbStatus } from '@/components/DbStatus';
+import { Metronome } from '@/components/Metronome';
 import { Eyebrow } from '@/components/ui';
 
 const LINKS = [
@@ -25,10 +26,11 @@ export default function Home() {
       <section className="pt-2">
         <h1 className="text-[28px] leading-tight font-bold tracking-tight">今日の練習</h1>
         <p className="mt-2 text-[13px] text-dim">
-          メニューの自動生成は Phase 3、メトロノームは Phase 1 でここに入ります。
-          いまはマスタデータと保存先の確認まで。
+          メニューの自動生成は Phase 3。いまはメトロノームとマスタデータまで。
         </p>
       </section>
+
+      <Metronome />
 
       <section className="flex flex-col gap-2.5">
         <Eyebrow>一覧を見る</Eyebrow>

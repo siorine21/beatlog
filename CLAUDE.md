@@ -45,4 +45,7 @@
 - Phase 0 完了（プロジェクト初期化、Dexie スキーマ、マスタデータ、/drills と /patterns の一覧）
 - Phase 6 の一部を先行実装（静的エクスポート、basePath、GitHub Pages デプロイ）。
   PWA（Serwist）、データのエクスポート/インポート、CSP は未着手。
-- 次は Phase 1（メトロノーム）。docs/phases.md を参照する。
+- Phase 1 完了（先読みスケジューラ、クリック音、メトロノームUI）。
+  スケジューラは src/lib/audio/scheduler.ts。予約したステップは scheduledSteps に
+  残してあり、Phase 2 のパターン再生と Phase 4 の判定はこれを共有する。
+- 次は Phase 2（リズムパターン集）。docs/phases.md を参照する。
