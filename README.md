@@ -31,6 +31,17 @@ src/app/      App Router のページ
 src/components/ 画面部品
 ```
 
+## デプロイ
+
+`main` への push で `.github/workflows/deploy.yml` が走り、GitHub Pages に静的サイトを公開する。
+
+- `basePath` は CI がリポジトリ名から自動決定する（`BASE_PATH`）。コードにリポジトリ名は書かない
+- 手書きの文字列パスは必ず `withBase()`（`src/lib/path.ts`）を通す。`next/link` と `next/router` は対象外
+- ローカルでサブパス配信を再現するには `BASE_PATH=/beatlog npm run build`
+- `npm run check:no-external` で、ビルド成果物に外部ドメインへの参照が無いことを検査する（CI でも実行）
+
+リポジトリ設定の Settings → Pages → Source は **GitHub Actions** を選ぶ。
+
 ## 進捗
 
 | Phase | 内容 | 状態 |
@@ -42,4 +53,4 @@ src/components/ 画面部品
 | 3 | 練習ログ・グラフ・メニュー自動生成 | 未着手 |
 | 4 | キャリブレーション + MIDI 入力 + 判定 | 未着手 |
 | 5 | マイクのオンセット検出（out） | 未着手 |
-| 6 | PWA・オフライン・GitHub Pages デプロイ | 未着手 |
+| 6 | PWA・オフライン・GitHub Pages デプロイ | デプロイのみ先行実装（PWA・エクスポート/インポート・CSP は未着手） |

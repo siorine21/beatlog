@@ -32,3 +32,6 @@
 
 ## 現在の進捗
 - Phase 0 完了（プロジェクト初期化、Dexie スキーマ、マスタデータ、/drills と /patterns の一覧）
+- Phase 6 の一部を先行実装（静的エクスポート、basePath、GitHub Pages デプロイ）。
+  PWA（Serwist）、データのエクスポート/インポート、CSP は未着手。
+- 次は Phase 1（メトロノーム）。docs/phases.md を参照する。
