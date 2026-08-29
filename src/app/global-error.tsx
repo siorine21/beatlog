@@ -30,6 +30,11 @@ export default function GlobalError({
   const reload = useCallback(async () => {
     setWorking(true);
     try {
+      // オフラインで消すと取り直せない。読み直しだけ試す
+      if (navigator.onLine === false) {
+        location.reload();
+        return;
+      }
       if ('caches' in window) {
         for (const key of await caches.keys()) await caches.delete(key);
       }
@@ -46,8 +51,10 @@ export default function GlobalError({
   useEffect(() => {
     console.error('画面の読み込みに失敗しました', error);
 
-    // 古い JS を掴んだだけなら、押させずにこちらで直す（1セッションに1回だけ）
+    // 古い JS を掴んだだけなら、押させずにこちらで直す（1セッションに1回だけ）。
+    // ただしオフラインでは消さない。取り直せず、他の画面まで開けなくなる
     if (!CHUNK_ERROR.test(error.message ?? '')) return;
+    if (navigator.onLine === false) return;
     try {
       if (sessionStorage.getItem(RECOVERED_FLAG)) return;
       sessionStorage.setItem(RECOVERED_FLAG, '1');

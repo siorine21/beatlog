@@ -130,4 +130,6 @@ export interface Settings {
    * 端末ごとの値なので、将来同期する場合も対象外にすること（spec.md §10.3）。
    */
   midiNoteMap: Record<number, Lane>;
+  /** 最後にバックアップ（エクスポート）した時刻。促しの判断に使う（spec.md §10.7） */
+  lastBackupAt?: number;
 }

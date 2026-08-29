@@ -10,6 +10,8 @@ import { useEffect } from 'react';
  * この失敗を拾って、控えを消して一度だけ読み直す。
  *
  * 繰り返しにならないよう、1セッションにつき1回だけ。
+ * オフラインのときは何もしない。控えを消しても取り直せず、
+ * オフラインで使えていた画面まで道連れにしてしまう。
  */
 const FLAG = 'beatlog.recovered';
 
@@ -21,6 +23,8 @@ const isChunkError = (message: string) =>
 export function ChunkErrorRecovery() {
   useEffect(() => {
     const recover = async () => {
+      if (navigator.onLine === false) return; // 取り直せないので消さない
+
       try {
         if (sessionStorage.getItem(FLAG)) return; // すでに一度やっている
         sessionStorage.setItem(FLAG, '1');

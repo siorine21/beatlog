@@ -1,9 +1,10 @@
-import { db, getSettings, today, updateSettings } from './db';
+import { db, getSettings, SETTINGS_ID, today, updateSettings } from './db';
 import { computeUnlockedLevel } from '@/data/levels';
 import { getDrill } from '@/data/drills';
 import { generateMenu } from './menu';
 import { graduatedDrillIds, isGraduated, type GraduationInput } from './graduation';
-import type { Attempt, DailyMenu, PracticeMode, Session } from './types';
+import { buildBackup, parseBackup, type Backup, type BackupData } from './backup';
+import type { Attempt, DailyMenu, PracticeMode, Session, Settings } from './types';
 
 /**
  * IndexedDB への読み書き。ブラウザでのみ読み込むこと（静的エクスポート時に評価させない）。
@@ -11,6 +12,77 @@ import type { Attempt, DailyMenu, PracticeMode, Session } from './types';
  */
 
 const newId = () => crypto.randomUUID();
+
+/** すべてのデータを書き出す（spec.md §10.7） */
+export async function exportAll(): Promise<Backup> {
+  const [sessions, attempts, dailyMenus, settings] = await Promise.all([
+    db.sessions.toArray(),
+    db.attempts.toArray(),
+    db.dailyMenus.toArray(),
+    db.settings.get(SETTINGS_ID),
+  ]);
+  const data: BackupData = { sessions, attempts, dailyMenus, settings: settings ?? null };
+  return buildBackup(data);
+}
+
+export interface ImportResult {
+  ok: boolean;
+  message: string;
+  issues?: string[];
+  counts?: { sessions: number; attempts: number; dailyMenus: number };
+}
+
+/**
+ * バックアップから復元する。
+ * 検証に通らなければ一切書き込まない（部分適用しない。spec.md §11.4）。
+ * 取り込みは置き換えで、いまのデータは消える。
+ */
+export async function importAll(text: string): Promise<ImportResult> {
+  const parsed = parseBackup(text);
+  if (!parsed.ok) return { ok: false, message: parsed.message, issues: parsed.issues };
+
+  const { sessions, attempts, dailyMenus, settings } = parsed.backup;
+
+  await db.transaction('rw', [db.sessions, db.attempts, db.dailyMenus, db.settings], async () => {
+    await Promise.all([db.sessions.clear(), db.attempts.clear(), db.dailyMenus.clear()]);
+    await db.sessions.bulkPut(sessions as Session[]);
+    await db.attempts.bulkPut(attempts as Attempt[]);
+    await db.dailyMenus.bulkPut(dailyMenus as DailyMenu[]);
+    if (settings) await db.settings.put(settings as unknown as Settings);
+  });
+
+  return {
+    ok: true,
+    message: '復元しました',
+    counts: {
+      sessions: sessions.length,
+      attempts: attempts.length,
+      dailyMenus: dailyMenus.length,
+    },
+  };
+}
+
+/** 端末のストレージ状況（spec.md §10.7） */
+export interface StorageStatus {
+  persisted: boolean;
+  usageBytes?: number;
+  quotaBytes?: number;
+}
+
+export async function storageStatus(): Promise<StorageStatus> {
+  const persisted = (await navigator.storage?.persisted?.()) ?? false;
+  const estimate = (await navigator.storage?.estimate?.()) ?? {};
+  return { persisted, usageBytes: estimate.usage, quotaBytes: estimate.quota };
+}
+
+/**
+ * 永続ストレージを要求する。ブラウザのストレージ逼迫時に
+ * IndexedDB が勝手に消される可能性を下げる（保証ではない）。
+ */
+export async function requestPersistentStorage(): Promise<boolean> {
+  if (!navigator.storage?.persist) return false;
+  return navigator.storage.persist();
+}
 
 export interface History {
   sessions: Session[];

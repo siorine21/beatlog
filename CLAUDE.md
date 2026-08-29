@@ -45,8 +45,7 @@
 ## 現在の進捗
 - Phase 0 完了（プロジェクト初期化、Dexie スキーマ、マスタデータ、/drills と /patterns の一覧）
 - Phase 6 の一部を先行実装（静的エクスポート、basePath、GitHub Pages デプロイ、
-  app/manifest.ts とアイコン、最小の Service Worker によるインストール対応）。
-  Serwist によるプリキャッシュ、データのエクスポート/インポート、CSP は未着手。
+  app/manifest.ts とアイコン、Service Worker によるインストール対応）。
   手書きの文字列パスは必ず src/lib/path.ts の withBase() を通す。
 - Phase 1 完了（先読みスケジューラ、クリック音、メトロノームUI）。
   スケジューラは src/lib/audio/scheduler.ts。予約したステップは scheduledSteps に
@@ -74,5 +73,15 @@
   マイクは使う直前に要求し、離れるときに必ず MediaStreamTrack.stop() を呼ぶ。
   micThreshold が 0 のときは環境ノイズから自動で決める。
   out モードで判定できるドリルの判断は src/lib/judgeable.ts（テストあり）。
-- 次は Phase 6（PWA・オフライン・仕上げ）。Serwist、データのエクスポート/インポート、
-  CSP が残っている。docs/phases.md を参照する。
+- Phase 6 完了（プリキャッシュ、データのエクスポート/インポート、CSP、永続ストレージ要求）。
+  Service Worker は public/sw.js。ビルドIDとプリキャッシュ一覧は
+  scripts/stamp-sw.mjs が out/sw.js に埋め込む（npm run build に含まれる）。
+  spec.md §5.2 の Serwist は入れていない。同じことが 40 行たらずで書けるので
+  依存を増やさなかった（「新しい依存パッケージを追加する前に」の判断）。
+  ハッシュ付きの /_next/static/ だけキャッシュ優先で、それ以外は必ず
+  ネットワーク優先にする。HTML と .txt は URL が変わらないまま中身が変わるので、
+  控えを先に返すと古いビルドを掴む。
+  バックアップの検証は src/lib/backup.ts（zod・テストあり）。外から来た JSON は
+  必ず parseBackup() を通す。検証に落ちたら一切書き込まない（部分適用しない）。
+  CSP は src/app/layout.tsx の meta タグ。外部への通信を足すと必ずここで落ちる。
+  書き出したファイルは *.beatlog.json で .gitignore 済み。絶対にコミットしない。

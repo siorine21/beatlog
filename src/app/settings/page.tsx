@@ -3,6 +3,7 @@ import { UnlockedLevelSetting } from '@/components/UnlockedLevelSetting';
 import { AssistSetting } from '@/components/AssistSetting';
 import { MidiSetting } from '@/components/MidiSetting';
 import { MicSetting } from '@/components/MicSetting';
+import { BackupSetting } from '@/components/BackupSetting';
 
 export const metadata: Metadata = { title: '設定 | Beatlog' };
 
@@ -20,6 +21,7 @@ export default function SettingsPage() {
       <AssistSetting />
       <MidiSetting />
       <MicSetting />
+      <BackupSetting />
     </main>
   );
 }
