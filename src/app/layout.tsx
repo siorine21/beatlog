@@ -29,9 +29,35 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
+/**
+ * CSP（spec.md §11.6）。GitHub Pages はHTTPヘッダを設定できないので meta で入れる。
+ *
+ * 要は connect-src を 'self' に閉じること。依存パッケージが汚染されても、
+ * 練習記録やマイクの音を外に送れない。
+ * script-src に 'unsafe-inline' が要るのは、静的エクスポートでは nonce を発行できず、
+ * Next.js が生成するインラインスクリプトを許可しないとアプリが起動しないため。
+ */
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "media-src 'self'",
+  "connect-src 'self'",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'none'",
+].join('; ');
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ja">
+      <head>
+        <meta httpEquiv="Content-Security-Policy" content={CSP} />
+      </head>
       <body className="antialiased">
         <div className="mx-auto flex min-h-dvh max-w-[540px] flex-col px-4 pb-16">
           <header className="sticky top-0 z-10 -mx-4 mb-4 border-b border-edge/80 bg-bg/85 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
@@ -40,7 +66,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 BEATLOG
               </span>
               <span className="font-mono text-[10px] tracking-[0.18em] text-silk uppercase">
-                Phase 5
+                Phase 6
               </span>
             </div>
             <NavTabs />

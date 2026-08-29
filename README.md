@@ -46,6 +46,27 @@ src/components/ 画面部品
 Pages サイトを作成する権限がないため）。有効化していないとデプロイは
 `Get Pages site failed` で落ちる。
 
+## オフラインとバックアップ
+
+`public/sw.js` が Service Worker で、`npm run build` の最後に
+`scripts/stamp-sw.mjs` がビルドIDと `out/` の全ファイル一覧を埋め込む。
+インストール時にそれを丸ごと控えるので、一度も開いていない画面もオフラインで開ける。
+
+- キャッシュ名にビルドIDが入る。デプロイのたびに名前が変わり、`activate` で
+  前のビルドの控えが必ず消える。古い HTML が残ると、すでに消えた JS を
+  読みにいって画面が真っ白になる
+- 控えを先に返してよいのは `/_next/static/`（ファイル名にハッシュがある）だけ。
+  HTML と RSC ペイロード（`.txt`）は URL が変わらないまま中身が変わるので、
+  必ずネットワークを先に試す
+- spec.md §5.2 は Serwist を挙げているが導入していない。同じことが 40 行たらずで
+  書けるので依存を増やさなかった
+
+練習の記録はこの端末の IndexedDB にしかない。設定画面から書き出し・読み込みができる。
+
+- 読み込むファイルは `src/lib/backup.ts` の `parseBackup()`（zod）を必ず通す。
+  1件でも壊れていたら全体を拒否し、いまのデータには一切触れない
+- 書き出したファイルは `*.beatlog.json`。`.gitignore` 済みで、絶対にコミットしない
+
 ## アイコン
 
 `assets/icon.svg` と `assets/icon-maskable.svg` が原本で、`public/icons/*.png` は
@@ -65,4 +86,4 @@ apple-touch 180 / favicon 32）。
 | 3 | 練習ログ・グラフ・メニュー自動生成 | 完了 |
 | 4 | キャリブレーション + MIDI 入力 + 判定 | 完了（実機での確認待ち） |
 | 5 | マイクのオンセット検出（out） | 完了（実機での確認待ち） |
-| 6 | PWA・オフライン・GitHub Pages デプロイ | デプロイとインストール（manifest・アイコン・Service Worker）まで。Serwist によるプリキャッシュ、エクスポート/インポート、CSP は未着手 |
+| 6 | PWA・オフライン・GitHub Pages デプロイ | 完了（全 138 ファイルをプリキャッシュ、データの書き出し/読み込み、CSP、永続ストレージ要求） |

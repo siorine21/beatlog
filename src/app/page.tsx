@@ -4,6 +4,7 @@ import { patterns } from '@/data/patterns';
 import { Metronome } from '@/components/Metronome';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { TodayMenu } from '@/components/TodayMenu';
+import { BackupReminder } from '@/components/BackupReminder';
 import { Eyebrow } from '@/components/ui';
 
 const LINKS = [
@@ -24,6 +25,8 @@ export default function Home() {
       </section>
 
       <InstallPrompt />
+
+      <BackupReminder />
 
       <TodayMenu />
 

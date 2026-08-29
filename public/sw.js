@@ -1,23 +1,55 @@
 /*
- * 最小限の Service Worker。
+ * Service Worker。目的は3つ。
  *
- * 目的は2つ:
  *   1. ブラウザに「インストールできるアプリ」として認識させる
  *      （Chrome は fetch を扱う Service Worker の登録を条件にしている）
- *   2. 一度開いた画面をオフラインでも表示する
+ *   2. 一度も開いていない画面も含めて、全ページをオフラインで開けるようにする
+ *   3. デプロイのたびに古い控えを確実に捨てる
  *
- * キャッシュ名にはビルドIDを埋め込む（scripts/stamp-sw.mjs がビルド後に書き換える）。
- * デプロイのたびに名前が変わるので、activate で古いキャッシュが必ず消える。
- * これをしないと、古いページの控えが残り続けて、
- * すでに消えた JS を読みにいって画面が真っ白になる。
+ * PRECACHE は out/ の中身から scripts/stamp-sw.mjs が埋め込む。
+ * index.html は「そのディレクトリのURL」として控える（/patterns/index.html ではなく
+ * /patterns/）。画面遷移のリクエストはディレクトリのURLで来るので、
+ * ファイル名のまま控えると照合できない。
  *
- * 全ページのプリキャッシュは Phase 6 で Serwist に置き換える。
+ * キャッシュ名にもビルドIDを埋め込む。デプロイのたびに名前が変わるので
+ * activate で古いキャッシュが必ず消える。これをしないと古いページの控えが
+ * 残り続けて、すでに消えた JS を読みにいって画面が真っ白になる。
  */
 const BUILD_ID = '__BUILD_ID__';
 const CACHE = `beatlog-${BUILD_ID}`;
 
-self.addEventListener('install', () => {
-  self.skipWaiting();
+/** ビルド後に実際のファイル一覧へ置き換わる（scope からの相対パス） */
+const PRECACHE = ['__PRECACHE__'];
+
+/**
+ * 全部まとめて控える。cache.addAll は1件でも失敗すると全部やめてしまうので、
+ * 1件ずつ入れて、取れなかったものだけ諦める。
+ * 数個欠けてもオフラインで大半の画面は開けるほうがよい。
+ */
+async function precache() {
+  const cache = await caches.open(CACHE);
+  const scope = self.registration.scope;
+  await Promise.all(
+    PRECACHE.map(async (path) => {
+      const url = new URL(path, scope).href;
+      try {
+        // cache: 'reload' で HTTP キャッシュを迂回し、必ず今のビルドを取る
+        const response = await fetch(new Request(url, { cache: 'reload' }));
+        if (response.ok) await cache.put(url, response);
+      } catch {
+        // この1件だけ諦める
+      }
+    }),
+  );
+}
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    (async () => {
+      await precache();
+      await self.skipWaiting();
+    })(),
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -74,7 +106,7 @@ self.addEventListener('fetch', (event) => {
       try {
         return await fetchAndStore(request);
       } catch {
-        const cached = await caches.match(request);
+        const cached = await caches.match(request, { ignoreSearch: true });
         if (cached) return cached;
         if (request.mode === 'navigate') {
           const fallback = await caches.match(new URL('./', self.registration.scope).href);
