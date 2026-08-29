@@ -63,4 +63,9 @@
   メニュー生成は src/lib/menu.ts、集計は src/lib/records.ts、卒業判定は
   src/lib/graduation.ts。いずれも DB に触らない純関数でテストがある。
   IndexedDB への読み書きは src/lib/store.ts に集約してある。
-- 次は Phase 4（キャリブレーションと MIDI 判定）。docs/phases.md を参照する。
+- Phase 4 完了（MIDI入力、キャリブレーション、タイミング判定）。
+  判定は src/lib/judge.ts（純関数・テストあり）、MIDI は src/lib/midi.ts。
+  MIDI の時刻は必ず perfToAudio で AudioContext 時刻に直してから判定に渡す。
+  MIDIノート→レーンの割り当てとキャリブレーション値は端末ごとの設定で、
+  同期の対象にしない（spec.md §10.3）。
+- 次は Phase 5（マイク入力・out モード）。docs/phases.md を参照する。

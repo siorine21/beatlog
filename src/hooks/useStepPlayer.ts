@@ -79,5 +79,10 @@ export function useStepPlayer({ bpm, beatsPerBar, stepsPerBeat, onStep }: StepPl
   // 画面を離れるときは必ず止める
   useEffect(() => () => stop(), [stop]);
 
-  return { playing, currentStep, start, stop, toggle };
+  /** 予約済みのステップ列。判定（Phase 4）から読む */
+  const getScheduled = useCallback(() => schedulerRef.current?.scheduledSteps ?? [], []);
+  /** 1ステップの長さ（秒） */
+  const getStepDuration = useCallback(() => schedulerRef.current?.stepDuration ?? 0, []);
+
+  return { playing, currentStep, start, stop, toggle, getScheduled, getStepDuration };
 }

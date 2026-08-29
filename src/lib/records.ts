@@ -122,6 +122,32 @@ export function bpmSeries(attempts: Attempt[], sessions: Session[], drillId: str
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
+export interface ErrorPoint {
+  date: string;
+  meanAbsErrorMs: number;
+}
+
+/**
+ * ドリル別の平均絶対誤差の推移（spec.md §3.5）。
+ * 判定値のある試行だけを見る。同じ日に複数回やった場合はその日の最小（最も良い値）。
+ */
+export function errorSeries(attempts: Attempt[], sessions: Session[], drillId: string): ErrorPoint[] {
+  const index = sessionIndex(sessions);
+  const byDate = new Map<string, ErrorPoint>();
+
+  for (const attempt of attempts) {
+    if (attempt.drillId !== drillId || attempt.meanAbsErrorMs === undefined) continue;
+    const session = index.get(attempt.sessionId);
+    if (!session) continue;
+    const current = byDate.get(session.date);
+    if (!current || attempt.meanAbsErrorMs < current.meanAbsErrorMs) {
+      byDate.set(session.date, { date: session.date, meanAbsErrorMs: attempt.meanAbsErrorMs });
+    }
+  }
+
+  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 export const totalPracticeSec = (attempts: Attempt[]): number =>
   attempts.reduce((sum, a) => sum + a.durationSec, 0);
 

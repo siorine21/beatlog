@@ -82,6 +82,21 @@ export interface RecordAttemptInput extends GraduationInput {
   drillId: string;
   mode: PracticeMode;
   menuId?: string;
+  hitCount?: number;
+  meanOffsetMs?: number;
+  stdDevMs?: number;
+  /** 散布図用。多いので間引いて保存する（spec.md §4） */
+  offsets?: number[];
+}
+
+/** 保存する打点の上限。多すぎると1件が肥大するので間引く */
+const MAX_STORED_OFFSETS = 200;
+
+function thinOut(offsets: number[] | undefined): number[] | undefined {
+  if (!offsets || offsets.length === 0) return undefined;
+  if (offsets.length <= MAX_STORED_OFFSETS) return offsets;
+  const stride = Math.ceil(offsets.length / MAX_STORED_OFFSETS);
+  return offsets.filter((_, index) => index % stride === 0);
 }
 
 export interface RecordAttemptResult {
@@ -108,7 +123,11 @@ export async function recordAttempt(input: RecordAttemptInput): Promise<RecordAt
     drillId: drill.id,
     bpm: input.bpm,
     durationSec: input.durationSec,
+    hitCount: input.hitCount,
+    meanOffsetMs: input.meanOffsetMs,
     meanAbsErrorMs: input.meanAbsErrorMs,
+    stdDevMs: input.stdDevMs,
+    offsets: thinOut(input.offsets),
     subjective: input.subjective,
     graduated,
   };

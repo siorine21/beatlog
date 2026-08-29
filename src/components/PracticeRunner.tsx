@@ -6,10 +6,14 @@ import { getPattern } from '@/data/patterns';
 import { targetSecOf, nextTargetBpm } from '@/lib/menu';
 import { usePracticeSession } from '@/hooks/usePracticeSession';
 import { usePracticeMode } from '@/hooks/usePracticeMode';
+import { useSettings } from '@/hooks/useSettings';
+import { midiSupported } from '@/lib/midi';
+import { ACCURACY_LABEL, accuracyOf, rushLabel } from '@/lib/judge';
 import { useTodayMenu } from '@/hooks/useTodayMenu';
 import { BPM_MAX, BPM_MIN } from '@/hooks/useMetronome';
 import { BpmSlider } from '@/components/BpmSlider';
 import { RhythmGrid } from '@/components/RhythmGrid';
+import { OffsetHistogram } from '@/components/OffsetHistogram';
 import { Card, Chip, Eyebrow } from '@/components/ui';
 import type { Drill, Subjective } from '@/lib/types';
 import type { RecordAttemptResult } from '@/lib/store';
@@ -30,6 +34,10 @@ export function PracticeRunner({ drill }: { drill: Drill }) {
   const pattern = drill.patternId ? getPattern(drill.patternId) : undefined;
   const { mode, ready } = usePracticeMode();
   const { menu } = useTodayMenu(mode, ready);
+  const { settings } = useSettings();
+  // 判定できるのは、いまのところ自宅モード（Web MIDI）だけ。
+  // マイク（out モード）は Phase 5 で加える
+  const judging = ready && mode === 'home' && midiSupported();
 
   const item = menu?.items.find((i) => i.drillId === drill.id);
   const targetSec = item?.targetSec ?? targetSecOf(drill);
@@ -39,6 +47,9 @@ export function PracticeRunner({ drill }: { drill: Drill }) {
     initialBpm: targetBpm > 0 ? targetBpm : 80,
     targetSec,
     pattern,
+    judging,
+    noteMap: settings?.midiNoteMap,
+    calibrationOffsetMs: settings?.midiOffsetMs ?? 0,
   });
 
   const [checked, setChecked] = useState<Set<string>>(new Set());
@@ -71,6 +82,15 @@ export function PracticeRunner({ drill }: { drill: Drill }) {
       durationSec: session.elapsedSec,
       subjective,
       checkedAll: isChecklist ? allChecked : undefined,
+      ...(session.summary.hitCount > 0
+        ? {
+            hitCount: session.summary.hitCount,
+            meanOffsetMs: session.summary.meanOffsetMs,
+            meanAbsErrorMs: session.summary.meanAbsErrorMs,
+            stdDevMs: session.summary.stdDevMs,
+            offsets: session.offsets,
+          }
+        : {}),
     });
     setResult(saved);
     setSaving(false);
@@ -100,6 +120,49 @@ export function PracticeRunner({ drill }: { drill: Drill }) {
             </div>
           </dl>
         </Card>
+
+        {result.attempt.hitCount !== undefined && result.attempt.hitCount > 0 && (
+          <Card className="px-4 py-4">
+            <div className="mb-2 flex items-center justify-between">
+              <Eyebrow>判定</Eyebrow>
+              <Chip tone="mono">
+                {ACCURACY_LABEL[accuracyOf(result.attempt.meanAbsErrorMs ?? 0)]}
+              </Chip>
+            </div>
+            <dl className="mb-3 flex flex-col gap-1.5 text-[13px]">
+              <div className="flex justify-between">
+                <dt className="text-silk">平均絶対誤差</dt>
+                <dd className="font-mono tnum">
+                  {Math.round(result.attempt.meanAbsErrorMs ?? 0)} ms
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-silk">平均のズレ</dt>
+                <dd className="font-mono tnum">
+                  {Math.round(result.attempt.meanOffsetMs ?? 0)} ms
+                  <span className="ml-1 font-sans text-dim">
+                    {rushLabel(result.attempt.meanOffsetMs ?? 0)}
+                  </span>
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-silk">安定度（標準偏差）</dt>
+                <dd className="font-mono tnum">{Math.round(result.attempt.stdDevMs ?? 0)} ms</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-silk">打点</dt>
+                <dd className="font-mono tnum">{result.attempt.hitCount} 打</dd>
+              </div>
+            </dl>
+            <OffsetHistogram offsets={result.attempt.offsets ?? []} />
+            {(result.attempt.meanAbsErrorMs ?? 0) > 50 && (
+              <p className="mt-3 border-t border-edge pt-3 text-[12px] text-dim">
+                誤差が 50ms を超えています。テンポを 5〜10 落として、ズレが縮むところから
+                積み直すのが近道です。
+              </p>
+            )}
+          </Card>
+        )}
 
         {result.graduated && (
           <Card className="border-ok px-4 py-4">
@@ -215,6 +278,46 @@ export function PracticeRunner({ drill }: { drill: Drill }) {
       {pattern && (
         <Card className="px-4 py-4">
           <RhythmGrid pattern={pattern} currentStep={session.currentStep} />
+        </Card>
+      )}
+
+      {judging && (
+        <Card className="px-4 py-4">
+          <div className="mb-2 flex items-center justify-between">
+            <Eyebrow>ズレ</Eyebrow>
+            <span className="font-mono text-[11px] tnum text-silk">
+              {session.summary.hitCount} 打
+              {session.summary.extraHits > 0 && ` / 余分 ${session.summary.extraHits}`}
+            </span>
+          </div>
+
+          {session.lastOffsetMs === null ? (
+            <p className="text-[12px] text-dim">
+              叩くとここにズレが出ます。まだ合わないときは設定のキャリブレーションを先に。
+            </p>
+          ) : (
+            <>
+              <p className="flex items-baseline justify-center gap-2">
+                <span className="text-[40px] leading-none font-bold tnum">
+                  {session.lastOffsetMs > 0 ? '+' : ''}
+                  {Math.round(session.lastOffsetMs)}
+                </span>
+                <span className="font-mono text-[11px] text-silk">ms</span>
+                <span className="text-[13px] text-dim">{rushLabel(session.lastOffsetMs)}</span>
+              </p>
+              {session.summary.hitCount > 3 && (
+                <p className="mt-2 text-center text-[12px] text-dim">
+                  平均絶対誤差 {Math.round(session.summary.meanAbsErrorMs)} ms（
+                  {ACCURACY_LABEL[accuracyOf(session.summary.meanAbsErrorMs)]}）
+                </p>
+              )}
+              {session.summary.hitCount > 8 && session.summary.meanAbsErrorMs > 50 && (
+                <p className="mt-2 rounded-lg border border-edge2 bg-panel2 px-3 py-2 text-[12px] text-dim">
+                  ズレが大きい状態が続いています。テンポを落としてみてください。
+                </p>
+              )}
+            </>
+          )}
         </Card>
       )}
 

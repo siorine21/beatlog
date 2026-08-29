@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
+import { DEFAULT_MIDI_NOTE_MAP } from './midi-map';
 import type { Attempt, DailyMenu, Session, Settings } from './types';
 
 /**
@@ -40,12 +41,14 @@ export const DEFAULT_SETTINGS: Settings = {
   assistLevel: 1,
   assistAuto: true,
   clickSound: 'click',
+  midiNoteMap: DEFAULT_MIDI_NOTE_MAP,
 };
 
 /** 未作成なら既定値で作る。設定は常にこの関数経由で読む。 */
 export async function getSettings(): Promise<Settings> {
   const found = await db.settings.get(SETTINGS_ID);
-  if (found) return found;
+  // 後から増えた項目は既定値で埋める（保存済みのレコードを壊さない）
+  if (found) return { ...DEFAULT_SETTINGS, ...found };
   await db.settings.put(DEFAULT_SETTINGS);
   return DEFAULT_SETTINGS;
 }
