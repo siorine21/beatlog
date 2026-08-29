@@ -8,6 +8,8 @@ import { usePracticeSession } from '@/hooks/usePracticeSession';
 import { usePracticeMode } from '@/hooks/usePracticeMode';
 import { useSettings } from '@/hooks/useSettings';
 import { midiSupported } from '@/lib/midi';
+import { micSupported } from '@/lib/mic';
+import { isJudgeable, judgeSkipReason } from '@/lib/judgeable';
 import { ACCURACY_LABEL, accuracyOf, rushLabel } from '@/lib/judge';
 import { useTodayMenu } from '@/hooks/useTodayMenu';
 import { BPM_MAX, BPM_MIN } from '@/hooks/useMetronome';
@@ -35,9 +37,17 @@ export function PracticeRunner({ drill }: { drill: Drill }) {
   const { mode, ready } = usePracticeMode();
   const { menu } = useTodayMenu(mode, ready);
   const { settings } = useSettings();
-  // 判定できるのは、いまのところ自宅モード（Web MIDI）だけ。
-  // マイク（out モード）は Phase 5 で加える
-  const judging = ready && mode === 'home' && midiSupported();
+  // 自宅モードは MIDI、外モードはマイク。手ぶらは判定しない
+  const canJudge = ready && isJudgeable(drill, mode);
+  const input: 'none' | 'midi' | 'mic' = !canJudge
+    ? 'none'
+    : mode === 'home' && midiSupported()
+      ? 'midi'
+      : mode === 'out' && micSupported()
+        ? 'mic'
+        : 'none';
+  const judging = input !== 'none';
+  const skipReason = ready ? judgeSkipReason(drill, mode) : null;
 
   const item = menu?.items.find((i) => i.drillId === drill.id);
   const targetSec = item?.targetSec ?? targetSecOf(drill);
@@ -47,9 +57,11 @@ export function PracticeRunner({ drill }: { drill: Drill }) {
     initialBpm: targetBpm > 0 ? targetBpm : 80,
     targetSec,
     pattern,
-    judging,
+    input,
     noteMap: settings?.midiNoteMap,
-    calibrationOffsetMs: settings?.midiOffsetMs ?? 0,
+    micThreshold: settings?.micThreshold,
+    calibrationOffsetMs:
+      (input === 'mic' ? settings?.micOffsetMs : settings?.midiOffsetMs) ?? 0,
   });
 
   const [checked, setChecked] = useState<Set<string>>(new Set());
@@ -281,15 +293,39 @@ export function PracticeRunner({ drill }: { drill: Drill }) {
         </Card>
       )}
 
+      {!judging && skipReason && (
+        <Card className="px-4 py-3.5">
+          <p className="text-[12px] text-dim">{skipReason}</p>
+        </Card>
+      )}
+
       {judging && (
         <Card className="px-4 py-4">
           <div className="mb-2 flex items-center justify-between">
             <Eyebrow>ズレ</Eyebrow>
-            <span className="font-mono text-[11px] tnum text-silk">
+            <span className="flex items-center gap-2 font-mono text-[11px] tnum text-silk">
+              {input === 'mic' && session.playing && <Chip tone="quiet">録音中</Chip>}
               {session.summary.hitCount} 打
               {session.summary.extraHits > 0 && ` / 余分 ${session.summary.extraHits}`}
             </span>
           </div>
+
+          {input === 'mic' && session.playing && (
+            <div className="mb-3">
+              <div className="h-2 overflow-hidden rounded-full bg-panel2">
+                <div
+                  className="h-full rounded-full bg-chrome transition-[width] duration-75"
+                  style={{ width: `${Math.min(100, session.mic.level * 300)}%` }}
+                />
+              </div>
+              {session.mic.measuring && (
+                <p className="mt-1 text-[11px] text-silk">環境ノイズを測定中…</p>
+              )}
+              {session.mic.error && (
+                <p className="mt-1 text-[11px] text-snare">{session.mic.error}</p>
+              )}
+            </div>
+          )}
 
           {session.lastOffsetMs === null ? (
             <p className="text-[12px] text-dim">

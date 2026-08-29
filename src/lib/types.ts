@@ -118,6 +118,7 @@ export interface Settings {
   id: number;
   midiOffsetMs: number;
   micOffsetMs: number;
+  /** マイクの閾値。0 なら起動時に環境ノイズから自動で決める（spec.md §6.5） */
   micThreshold: number;
   unlockedLevel: number;
   /** auto=ドリルレベル由来、手動上書き可 */

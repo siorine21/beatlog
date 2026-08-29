@@ -8,7 +8,8 @@ import { clampBpm } from './useMetronome';
 import { useStepPlayer } from './useStepPlayer';
 import { useWakeLock } from './useWakeLock';
 import { useMidiInput } from './useMidiInput';
-import { expectedFrom, matchHit, summarize } from '@/lib/judge';
+import { useMicInput } from './useMicInput';
+import { expectedFrom, matchHit, summarize, type HitEvent } from '@/lib/judge';
 import type { Lane, RhythmPattern } from '@/lib/types';
 
 /**
@@ -22,16 +23,19 @@ export function usePracticeSession({
   initialBpm,
   targetSec,
   pattern,
-  judging = false,
+  input = 'none',
   noteMap,
+  micThreshold,
   calibrationOffsetMs = 0,
 }: {
   initialBpm: number;
   targetSec: number;
   pattern?: RhythmPattern;
-  /** MIDI で打点を判定するか（自宅モードで Web MIDI が使えるとき） */
-  judging?: boolean;
+  /** 打点をどこから取るか。'none' なら判定しない */
+  input?: 'none' | 'midi' | 'mic';
   noteMap?: Record<number, Lane>;
+  /** マイクの閾値（未指定なら環境ノイズから決める） */
+  micThreshold?: number;
   calibrationOffsetMs?: number;
 }) {
   const [bpm, setBpmState] = useState(initialBpm);
@@ -56,13 +60,17 @@ export function usePracticeSession({
 
   useWakeLock(player.playing);
 
-  // 打点をその場で突き合わせる。予約列は数小節ぶんしか残らないので、
-  // 終わってからまとめて判定するのではなく、届いたそばから処理する
-  useMidiInput({
-    enabled: judging && player.playing,
-    noteMap,
-    onHit: (hit) => {
-      const match = matchHit(hit, expectedFrom(player.getScheduled(), pattern?.grid), {
+  /**
+   * 打点をその場で突き合わせる。予約列は数小節ぶんしか残らないので、
+   * 終わってからまとめて判定するのではなく、届いたそばから処理する。
+   *
+   * マイクの場合はレーンが取れないので、パターンのグリッドは渡さず
+   * 「全ステップが打点」として扱う（spec.md §6.5）。
+   */
+  const handleHit = useCallback(
+    (hit: HitEvent) => {
+      const grid = input === 'mic' ? undefined : pattern?.grid;
+      const match = matchHit(hit, expectedFrom(player.getScheduled(), grid), {
         stepDurationSec: player.getStepDuration(),
         calibrationOffsetMs,
       });
@@ -74,6 +82,19 @@ export function usePracticeSession({
       setOffsets(offsetsRef.current);
       setLastOffsetMs(match.offsetMs);
     },
+    [calibrationOffsetMs, input, pattern?.grid, player],
+  );
+
+  useMidiInput({
+    enabled: input === 'midi' && player.playing,
+    noteMap,
+    onHit: handleHit,
+  });
+
+  const mic = useMicInput({
+    enabled: input === 'mic' && player.playing,
+    threshold: micThreshold,
+    onHit: handleHit,
   });
 
   // 経過時間は再生中だけ進める。表示のためだけなので performance.now() を使う
@@ -143,5 +164,7 @@ export function usePracticeSession({
     offsets,
     lastOffsetMs,
     summary: summarize(offsets, extraHits),
+    /** マイクの状態（out モードのとき） */
+    mic: { level: mic.level, measuring: mic.measuring, error: mic.error },
   };
 }

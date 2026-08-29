@@ -7,24 +7,31 @@ import { getMasterBus } from '@/lib/audio/bus';
 import type { ScheduledStep, TempoSpec } from '@/lib/audio/scheduler';
 import { useStepPlayer } from '@/hooks/useStepPlayer';
 import { useMidiInput } from '@/hooks/useMidiInput';
+import { useMicInput } from '@/hooks/useMicInput';
 import { useSettings } from '@/hooks/useSettings';
-import { expectedFrom, histogram, matchHit, median } from '@/lib/judge';
+import { expectedFrom, matchHit, median, type HitEvent } from '@/lib/judge';
+import { OffsetHistogram } from '@/components/OffsetHistogram';
 import { Card, Chip, Eyebrow } from '@/components/ui';
 
 /**
  * キャリブレーション（spec.md §6.3）。
  *
- * イヤホンの出力遅延と MIDI 入力遅延は端末ごとに違うので実測する。
+ * イヤホンの出力遅延と入力の遅延は端末ごとに違うので実測する。
  * 80BPM の4分クリックを鳴らし、1小節のカウントインのあと16打叩いてもらい、
  * オフセットの中央値を採る（平均ではない。外れ値に強いため）。
+ *
+ * MIDI（自宅）とマイク（外）は遅延の量が違うので、別々に測って別々に保存する。
  */
 const BPM = 80;
 const COUNT_IN_BEATS = 4;
 const TARGET_HITS = 16;
 const STEP_SEC = 60 / BPM;
 
+type Source = 'midi' | 'mic';
+
 export function Calibration() {
   const { settings, update } = useSettings();
+  const [source, setSource] = useState<Source>('midi');
   const [offsets, setOffsets] = useState<number[]>([]);
   const [saved, setSaved] = useState(false);
   const countInEndRef = useRef<number | null>(null);
@@ -38,12 +45,8 @@ export function Calibration() {
 
   const player = useStepPlayer({ bpm: BPM, beatsPerBar: 4, stepsPerBeat: 1, onStep });
 
-  const done = offsets.length >= TARGET_HITS;
-
-  useMidiInput({
-    enabled: player.playing,
-    noteMap: settings?.midiNoteMap,
-    onHit: (hit) => {
+  const handleHit = useCallback(
+    (hit: HitEvent) => {
       const countInEnd = countInEndRef.current;
       if (countInEnd === null || hit.time < countInEnd) return; // カウントイン中は数えない
       if (offsetsRef.current.length >= TARGET_HITS) return;
@@ -59,48 +62,78 @@ export function Calibration() {
       setOffsets(offsetsRef.current);
       if (offsetsRef.current.length >= TARGET_HITS) player.stop();
     },
+    [player],
+  );
+
+  const midi = useMidiInput({
+    enabled: source === 'midi' && player.playing,
+    noteMap: settings?.midiNoteMap,
+    onHit: handleHit,
   });
 
-  const midi = useMidiInput({ enabled: false, noteMap: settings?.midiNoteMap, onHit: () => {} });
+  const mic = useMicInput({
+    enabled: source === 'mic' && player.playing,
+    threshold: settings?.micThreshold,
+    onHit: handleHit,
+  });
 
-  const start = () => {
-    offsetsRef.current = [];
-    countInEndRef.current = null;
-    setOffsets([]);
-    setSaved(false);
-    player.toggle();
-  };
+  const done = offsets.length >= TARGET_HITS;
+  const value = Math.round(median(offsets));
+  const spread = offsets.length > 1 ? Math.round(Math.max(...offsets) - Math.min(...offsets)) : 0;
+  const savedValue = source === 'midi' ? settings?.midiOffsetMs : settings?.micOffsetMs;
 
-  const reset = () => {
+  const reset = useCallback(() => {
     player.stop();
     offsetsRef.current = [];
     countInEndRef.current = null;
     setOffsets([]);
     setSaved(false);
-  };
+  }, [player]);
 
-  const value = Math.round(median(offsets));
-  const spread = offsets.length > 1 ? Math.round(Math.max(...offsets) - Math.min(...offsets)) : 0;
-  const bars = histogram(offsets, 20, 7);
-  const maxBar = Math.max(1, ...bars);
+  const sources: { id: Source; label: string; available: boolean | null; note: string }[] = [
+    { id: 'midi', label: 'MIDI（自宅）', available: midi.supported, note: '電子ドラムを繋いで叩く' },
+    { id: 'mic', label: 'マイク（外）', available: mic.supported, note: '練習パッドを叩く' },
+  ];
 
-  if (midi.supported === null) {
-    return <Card className="px-4 py-4 text-[13px] text-dim">確認しています…</Card>;
-  }
-
-  if (!midi.supported) {
-    return (
-      <Card className="px-4 py-4">
-        <p className="text-[13px] text-dim">
-          この端末は Web MIDI に対応していないため、MIDI のキャリブレーションはできません。
-          マイク（out モード）のキャリブレーションは Phase 5 で追加します。
-        </p>
-      </Card>
-    );
-  }
+  const current = sources.find((s) => s.id === source)!;
 
   return (
     <div className="flex flex-col gap-4">
+      <Card className="px-4 py-4">
+        <div className="mb-2">
+          <Eyebrow>測るもの</Eyebrow>
+        </div>
+        <div className="flex gap-1.5">
+          {sources.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={item.id === source}
+              disabled={item.available === false}
+              onClick={() => {
+                reset();
+                setSource(item.id);
+              }}
+              className={`min-h-14 flex-1 touch-manipulation rounded-lg border px-2 transition-colors disabled:opacity-30 ${
+                item.id === source
+                  ? 'border-chrome bg-chrome text-bg'
+                  : 'border-edge2 bg-panel2 text-dim hover:text-txt active:bg-raised'
+              }`}
+            >
+              <span className="block text-[13px] font-semibold">{item.label}</span>
+              <span className={`block text-[10px] ${item.id === source ? 'text-bg/70' : 'text-silk'}`}>
+                {item.note}
+              </span>
+            </button>
+          ))}
+        </div>
+        {current.available === false && (
+          <p className="mt-2 text-[12px] text-dim">
+            この端末では{current.label}を使えません。
+          </p>
+        )}
+      </Card>
+
       <Card className="px-4 py-4">
         <div className="mb-2">
           <Eyebrow>手順</Eyebrow>
@@ -122,8 +155,12 @@ export function Calibration() {
 
         <button
           type="button"
-          onClick={player.playing ? reset : start}
-          className={`mt-4 h-14 w-full touch-manipulation rounded-xl font-mono text-[14px] font-bold tracking-[0.22em] uppercase transition-colors ${
+          disabled={current.available === false}
+          onClick={player.playing ? reset : () => {
+            reset();
+            player.toggle();
+          }}
+          className={`mt-4 h-14 w-full touch-manipulation rounded-xl font-mono text-[14px] font-bold tracking-[0.22em] uppercase transition-colors disabled:opacity-30 ${
             player.playing
               ? 'border border-edge2 bg-raised text-txt active:bg-panel2'
               : 'bg-chrome text-bg active:bg-dim'
@@ -132,8 +169,24 @@ export function Calibration() {
           {player.playing ? 'Stop' : done ? 'Retry' : 'Start'}
         </button>
 
+        {player.playing && source === 'mic' && (
+          <div className="mt-3">
+            <div className="h-2 overflow-hidden rounded-full bg-panel2">
+              <div
+                className="h-full rounded-full bg-chrome transition-[width] duration-75"
+                style={{ width: `${Math.min(100, mic.level * 300)}%` }}
+              />
+            </div>
+            <p className="mt-1 text-[11px] text-silk">
+              {mic.measuring ? '環境ノイズを測定中…' : '録音中。音声は保存されません'}
+            </p>
+          </div>
+        )}
         {player.playing && countInEndRef.current === null && (
           <p className="mt-2 text-center text-[12px] text-dim">カウントイン中…</p>
+        )}
+        {(midi.error || mic.error) && (
+          <p className="mt-2 text-[12px] text-snare">{midi.error ?? mic.error}</p>
         )}
       </Card>
 
@@ -147,22 +200,7 @@ export function Calibration() {
             </div>
           </div>
 
-          <div className="flex h-20 items-end gap-1.5" aria-hidden>
-            {bars.map((count, index) => (
-              <div key={index} className="flex flex-1 flex-col items-center gap-1">
-                <div
-                  className="w-full rounded-[3px] bg-chrome"
-                  style={{ height: `${Math.max(2, (count / maxBar) * 60)}px` }}
-                />
-                <span className="font-mono text-[9px] tnum text-silk">
-                  {(index - 3) * 20}
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="mt-1 text-center text-[10px] text-silk">
-            横軸: ズレ（ms）。負が走り、正がもたり
-          </p>
+          <OffsetHistogram offsets={offsets} />
 
           <p className="mt-3 border-t border-edge pt-3 text-[12px] text-dim">
             中央値を採ります（平均ではありません。外れ値に強いため）。
@@ -173,7 +211,7 @@ export function Calibration() {
             type="button"
             disabled={saved}
             onClick={async () => {
-              await update({ midiOffsetMs: value });
+              await update(source === 'midi' ? { midiOffsetMs: value } : { micOffsetMs: value });
               setSaved(true);
             }}
             className="mt-3 h-12 w-full touch-manipulation rounded-xl bg-chrome font-mono text-[13px] font-bold tracking-[0.2em] text-bg uppercase disabled:opacity-40"
@@ -194,9 +232,14 @@ export function Calibration() {
           </div>
           <div className="flex justify-between">
             <dt className="text-silk">マイクの遅延</dt>
-            <dd className="font-mono tnum text-dim">Phase 5 で測定</dd>
+            <dd className="font-mono tnum">{settings?.micOffsetMs ?? 0} ms</dd>
           </div>
         </dl>
+        {savedValue !== undefined && (
+          <p className="mt-2 text-[11px] text-silk">
+            いま測っているのは「{current.label}」です。
+          </p>
+        )}
       </Card>
 
       <Link href="/settings" className="inline-flex min-h-11 items-center text-[12px] text-dim">

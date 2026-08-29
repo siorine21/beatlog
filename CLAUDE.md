@@ -68,4 +68,11 @@
   MIDI の時刻は必ず perfToAudio で AudioContext 時刻に直してから判定に渡す。
   MIDIノート→レーンの割り当てとキャリブレーション値は端末ごとの設定で、
   同期の対象にしない（spec.md §10.3）。
-- 次は Phase 5（マイク入力・out モード）。docs/phases.md を参照する。
+- Phase 5 完了（マイクのオンセット検出、out モードの判定）。
+  検出は src/lib/audio/onset-worklet.js（AudioWorklet）と src/lib/mic.ts。
+  ワークレットから外に出すのは { time, peak } だけで、波形は一切送らない。
+  マイクは使う直前に要求し、離れるときに必ず MediaStreamTrack.stop() を呼ぶ。
+  micThreshold が 0 のときは環境ノイズから自動で決める。
+  out モードで判定できるドリルの判断は src/lib/judgeable.ts（テストあり）。
+- 次は Phase 6（PWA・オフライン・仕上げ）。Serwist、データのエクスポート/インポート、
+  CSP が残っている。docs/phases.md を参照する。
