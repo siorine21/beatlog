@@ -59,4 +59,8 @@
   五線譜のレイアウト計算は src/lib/notation/layout.ts（純関数・テストあり）、
   描画は src/components/Notation.tsx。楽譜ライブラリは使わない。
   グリッドと五線譜には同じ currentStep を渡して同時にハイライトする。
-- 次は Phase 3（ログ・グラフ・メニュー生成）。docs/phases.md を参照する。
+- Phase 3 完了（メニュー自動生成、練習実行画面、記録とグラフ、卒業判定とレベル解放）。
+  メニュー生成は src/lib/menu.ts、集計は src/lib/records.ts、卒業判定は
+  src/lib/graduation.ts。いずれも DB に触らない純関数でテストがある。
+  IndexedDB への読み書きは src/lib/store.ts に集約してある。
+- 次は Phase 4（キャリブレーションと MIDI 判定）。docs/phases.md を参照する。
