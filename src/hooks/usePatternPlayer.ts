@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { scheduleClick } from '@/lib/audio/click';
 import { scheduleDrum } from '@/lib/audio/drums';
+import { getMasterBus } from '@/lib/audio/bus';
 import type { ScheduledStep, TempoSpec } from '@/lib/audio/scheduler';
 import type { Lane, RhythmPattern } from '@/lib/types';
 import { LANE_ORDER } from '@/lib/lanes';
@@ -22,13 +23,14 @@ export function usePatternPlayer(pattern: RhythmPattern, initialBpm?: number) {
 
   const onStep = useCallback(
     (step: ScheduledStep, spec: TempoSpec, ctx: AudioContext) => {
+      const bus = getMasterBus(ctx);
       for (const lane of LANE_ORDER) {
         if ((pattern.grid[lane as Lane]?.[step.step] ?? 0) > 0) {
-          scheduleDrum(ctx, ctx.destination, lane, step.time);
+          scheduleDrum(ctx, bus, lane, step.time);
         }
       }
       if (withClick && step.step % spec.stepsPerBeat === 0) {
-        scheduleClick(ctx, ctx.destination, step.step === 0 ? 'accent' : 'beat', step.time);
+        scheduleClick(ctx, bus, step.step === 0 ? 'accent' : 'beat', step.time);
       }
     },
     [pattern.grid, withClick],

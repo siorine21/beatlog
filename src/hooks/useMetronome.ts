@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { scheduleClick, type ClickKind } from '@/lib/audio/click';
+import { getMasterBus } from '@/lib/audio/bus';
 import type { ScheduledStep, TempoSpec } from '@/lib/audio/scheduler';
 import { useStepPlayer } from './useStepPlayer';
 
@@ -52,7 +53,7 @@ export function useMetronome() {
   const onStep = useCallback((step: ScheduledStep, spec: TempoSpec, ctx: AudioContext) => {
     const onBeat = step.step % spec.stepsPerBeat === 0;
     const kind: ClickKind = !onBeat ? 'sub' : step.step === 0 ? 'accent' : 'beat';
-    scheduleClick(ctx, ctx.destination, kind, step.time);
+    scheduleClick(ctx, getMasterBus(ctx), kind, step.time);
   }, []);
 
   const player = useStepPlayer({

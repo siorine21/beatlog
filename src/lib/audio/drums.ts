@@ -80,11 +80,17 @@ function scheduleNoise(
   source.stop(time + decay + 0.05);
 }
 
+
 /** time（AudioContext 時刻）ちょうどに鳴るよう予約する */
 export function scheduleDrum(ctx: AudioContext, dest: AudioNode, lane: Lane, time: number): void {
   switch (lane) {
     case 'kick':
-      scheduleTone(ctx, dest, time, { from: 125, to: 44, peak: 0.9, decay: 0.24 });
+      // 胴の低音。これだけだとスマホのスピーカーでは再生されず、聞こえない
+      scheduleTone(ctx, dest, time, { from: 160, to: 48, peak: 0.8, decay: 0.3 });
+      // 中域の押し。小さいスピーカーで「踏んだ感じ」を出しているのはここ
+      scheduleTone(ctx, dest, time, { from: 420, to: 160, peak: 0.35, decay: 0.05 });
+      // ビーターが当たる音。輪郭を作る
+      scheduleNoise(ctx, dest, time, { type: 'highpass', freq: 2000, peak: 0.24, decay: 0.02 });
       return;
     case 'tom1':
       scheduleTone(ctx, dest, time, { from: 260, to: 150, peak: 0.6, decay: 0.28 });
