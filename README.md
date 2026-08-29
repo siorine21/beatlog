@@ -41,6 +41,9 @@ src/components/ 画面部品
 - `npm run check:no-external` で、ビルド成果物に外部ドメインへの参照が無いことを検査する（CI でも実行）
 
 リポジトリ設定の Settings → Pages → Source は **GitHub Actions** を選ぶ。
+これは手作業が必要で、workflow からは自動化できない（`GITHUB_TOKEN` に
+Pages サイトを作成する権限がないため）。有効化していないとデプロイは
+`Get Pages site failed` で落ちる。
 
 ## 進捗
 

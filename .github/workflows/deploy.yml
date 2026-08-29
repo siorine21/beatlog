@@ -32,11 +32,12 @@ jobs:
       - run: npm run build
       # 外部ドメインへの参照が混入していないことを確認する（spec.md §11.6）
       - run: npm run check:no-external
-      # enablement: true でリポジトリの Pages を action 自身が有効化する。
-      # spec.md §5.1 (c) の「手で設定させない」方針に合わせ、
-      # Settings での手作業なしにデプロイが通るようにする。
+      # 事前にリポジトリ設定の Settings → Pages → Source を
+      # 「GitHub Actions」にしておくこと。workflow の GITHUB_TOKEN には
+      # Pages サイトを新規作成する権限がないため（enablement: true は
+      # "Resource not accessible by integration" で失敗する）、
+      # ここだけは手作業が要る。
       - uses: actions/configure-pages@v5
-        with: { enablement: true }
       - uses: actions/upload-pages-artifact@v3
         with: { path: ./out }
   deploy:
