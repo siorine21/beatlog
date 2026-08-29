@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/*
+ * 配色は docs/notation-sample.html の見本に合わせる。
+ * レーンの色（hihat/snare/kick）はグリッドと五線譜で完全に一致させること（spec.md §3.8）。
+ */
+@theme {
+  --color-bg: #0f1115;
+  --color-panel: #171a20;
+  --color-panel2: #1c2027;
+  --color-edge: #272c34;
+  --color-edge2: #333944;
+  --color-txt: #eae9e5;
+  --color-dim: #7c838d;
+  --color-silk: #666d77;
+  --color-chrome: #d6dae0;
+
+  --color-hihat: #d2a34a;
+  --color-snare: #d05b50;
+  --color-kick: #4b84c4;
+  --color-tom1: #6aa87f;
+  --color-tom2: #4f8f6a;
+  --color-crash: #a98fd0;
+  --color-ride: #8fa8d0;
+
+  /* 外部フォントは使わない（spec.md §5）。端末のシステムフォントを使う。 */
+  --font-sans: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-txt);
+  font-family: var(--font-sans);
+  line-height: 1.65;
+}
