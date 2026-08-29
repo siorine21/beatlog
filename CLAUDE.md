@@ -48,4 +48,8 @@
 - Phase 1 完了（先読みスケジューラ、クリック音、メトロノームUI）。
   スケジューラは src/lib/audio/scheduler.ts。予約したステップは scheduledSteps に
   残してあり、Phase 2 のパターン再生と Phase 4 の判定はこれを共有する。
-- 次は Phase 2（リズムパターン集）。docs/phases.md を参照する。
+- Phase 2 完了（RhythmGrid、パターン再生、レベルロック、/patterns/[id]）。
+  スケジューラの起動・停止と現在ステップの取り出しは src/hooks/useStepPlayer.ts に
+  まとめてあり、メトロノームとパターン再生で共有している。
+  /settings の解放レベル切替は Phase 3 で自動化するまでの暫定。
+- 次は Phase 2b（五線譜と読譜支援）。docs/phases.md と docs/notation-sample.html を参照する。

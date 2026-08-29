@@ -27,7 +27,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 BEATLOG
               </span>
               <span className="font-mono text-[10px] tracking-[0.18em] text-silk uppercase">
-                Phase 1
+                Phase 2
               </span>
             </div>
             <NavTabs />
